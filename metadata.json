@@ -1,0 +1,6 @@
+{
+  "name": "موقد التخييم المحمول",
+  "description": "موقد خارجي قابل للطي — خفيف، عملي وسهل الحمل في جميع مغامراتك.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

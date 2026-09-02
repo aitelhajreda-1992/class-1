@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #F9F8F6;
+  --color-brand-ink: #111113;
+  --color-brand-accent: #FF4D00;
+  --color-brand-faint: rgba(17, 17, 19, 0.1);
+
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-heading: 'Oswald', sans-serif;
+}
