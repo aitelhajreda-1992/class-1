@@ -4,6 +4,7 @@ export default function App() {
   const [formData, setFormData] = useState({ name: '', address: '', phone: '' });
   const [errors, setErrors] = useState({ name: '', address: '', phone: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const scrollToCheckout = () => {
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' });
@@ -33,10 +34,32 @@ export default function App() {
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      setIsSubmitted(true);
+      setIsSubmitting(true);
+      try {
+        const payload = {
+          fullName: formData.name,
+          address: formData.address,
+          phone: formData.phone
+        };
+
+        await fetch('https://script.google.com/macros/s/AKfycbxDzEe9HXeBTy5k-CiG2zxjZBTfleRQDd86nPDZbhn8zLFLQKYk5z8-98J2yi1dtHdlCw/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload),
+        });
+        setIsSubmitted(true);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -172,8 +195,11 @@ export default function App() {
                       {errors.phone && <p className="text-brand-accent text-sm mt-2 font-bold">{errors.phone}</p>}
                   </div>
                   
-                  <button type="submit" className="bg-brand-ink hover:bg-brand-accent text-brand-bg py-6 mt-4 font-bold rounded-none uppercase transition-colors cursor-pointer text-lg">
-                    تأكيد الطلب — الدفع عند الاستلام
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-brand-ink hover:bg-brand-accent text-brand-bg py-6 mt-4 font-bold rounded-none uppercase transition-colors cursor-pointer text-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                    {isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب — الدفع عند الاستلام'}
                   </button>
               </form>
             )}
