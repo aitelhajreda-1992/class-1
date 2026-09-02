@@ -98,13 +98,13 @@ export default function App() {
         {/* Image Gallery */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="border border-brand-faint aspect-square p-2 bg-[rgba(0,0,0,0.02)]">
-              <img src="https://img.sanishtech.com/u/65b0e28b97f949533a5e8986e66bdcc8.jpg" alt="Gallery" className="w-full h-full object-cover" />
+              <img src="https://i.ibb.co/VnHwwtf/Gemini-Generated-Image-n0ud1gn0ud1gn0udf.jpg" alt="Gallery" className="w-full h-full object-cover" />
           </div>
           <div className="border border-brand-faint aspect-square p-2 bg-[rgba(0,0,0,0.02)]">
               <img src="https://img.sanishtech.com/u/a5840b4b85bc2b8c418d52a78513ebd2.jpg" alt="Gallery" className="w-full h-full object-cover" />
           </div>
           <div className="border border-brand-faint aspect-square p-2 bg-[rgba(0,0,0,0.02)]">
-              <img src="https://img.sanishtech.com/u/6c62474582efefd92d9ec4e75fa76d58.jpg" alt="Gallery" className="w-full h-full object-cover" />
+              <img src="https://i.ibb.co/d4qd4GpD/Gemini-Generated-Image-fy75exfy75exfy75-2.jpg" alt="Gallery" className="w-full h-full object-cover" />
           </div>
         </section>
 
