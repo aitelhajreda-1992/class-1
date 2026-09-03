@@ -71,7 +71,12 @@ export default function App() {
       
       {/* Header */}
       <header className="border-b border-brand-faint px-[5vw] py-6 flex justify-between items-center">
-        <div className="font-heading text-3xl md:text-4xl font-extrabold uppercase tracking-wide">STOVEIT</div>
+        <img 
+          src="https://i.ibb.co/6RbL522J/White-and-Teal-Minimalist-Automotive-Logo.png" 
+          alt="StoveIT Logo" 
+          className="h-14 md:h-16 object-contain mix-blend-multiply"
+          referrerPolicy="no-referrer"
+        />
         <button 
           onClick={scrollToCheckout}
           className="bg-brand-accent text-brand-ink px-8 py-3 font-bold uppercase rounded-none hover:bg-orange-600 transition-colors"
@@ -90,7 +95,7 @@ export default function App() {
               اطبخ في أي مكان <span className="text-brand-accent">🔥</span>
             </h1>
             <p className="text-xl mb-8 opacity-70">
-              موقد خارجي قابل للطي — خفيف، عملي وسهل الحمل في جميع مغامراتك.
+              طاولة مع موقد خارجي قابلة للطي — خفيفة، عملية وسهلة الحمل في جميع مغامراتك.
             </p>
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-baseline gap-3">
@@ -117,7 +122,7 @@ export default function App() {
         {/* Product Benefits */}
         <section className="border border-brand-faint p-8 md:p-12 lg:p-16">
           <p className="text-xl md:text-2xl leading-[1.8] opacity-80 font-medium max-w-4xl">
-            صُمم هذا الموقد ليكون <span className="font-bold text-brand-accent">قوياً وعملياً</span> لتحضير وجباتك بسهولة تامة في قلب الطبيعة. يتميز بتصميم <span className="font-bold text-brand-accent">قابل للطي</span> لا يأخذ مساحة كبيرة في حقيبتك ويطوى في ثوانٍ معدودة. نضمن لك <span className="font-bold text-brand-accent">توصيلاً سريعاً</span> وموثوقاً مع خيار الدفع عند الاستلام بكل أمان.
+            صُممت هذه الطاولة لتكون <span className="font-bold text-brand-accent">قوية وعملية</span> لتحضير وجباتك بسهولة تامة في قلب الطبيعة. يتميز بتصميم <span className="font-bold text-brand-accent">قابل للطي</span> لا يأخذ مساحة كبيرة وتطوى في ثوانٍ معدودة. نضمن لك <span className="font-bold text-brand-accent">توصيلاً سريعاً وموثوقاً</span> مع خيار الدفع عند الاستلام بكل أمان.
           </p>
         </section>
 
