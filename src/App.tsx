@@ -93,7 +93,10 @@ export default function App() {
               موقد خارجي قابل للطي — خفيف، عملي وسهل الحمل في جميع مغامراتك.
             </p>
             <div className="flex flex-wrap items-center gap-6">
-              <div className="text-5xl font-bold text-brand-accent font-heading">849 درهم</div>
+              <div className="flex items-baseline gap-3">
+                <div className="text-5xl font-bold text-brand-accent font-heading">799 درهم</div>
+                <div className="text-2xl font-bold text-red-500 line-through opacity-80">999 درهم</div>
+              </div>
               <button 
                 onClick={() => document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' })}
                 className="bg-brand-accent text-brand-bg hover:bg-brand-ink px-8 py-4 font-bold text-lg transition-colors cursor-pointer"
