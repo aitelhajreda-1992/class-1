@@ -10,3 +10,13 @@
   --font-mono: 'Space Mono', monospace;
   --font-heading: 'Oswald', sans-serif;
 }
+
+@keyframes shake {
+  0%, 80%, 100% { transform: translateX(0); }
+  82%, 86%, 90%, 94%, 98% { transform: translateX(-4px); }
+  84%, 88%, 92%, 96% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 3s cubic-bezier(.36,.07,.19,.97) infinite;
+}

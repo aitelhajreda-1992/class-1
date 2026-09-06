@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function App() {
   const [formData, setFormData] = useState({ name: '', address: '', phone: '' });
   const [errors, setErrors] = useState({ name: '', address: '', phone: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [timeLeft, setTimeLeft] = useState(2 * 3600 + 15 * 60 + 30);
+  const [viewers, setViewers] = useState(5);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    const viewersTimer = setInterval(() => {
+      setViewers(Math.floor(Math.random() * (6 - 3 + 1)) + 3); // Random between 3 and 6
+    }, 7000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(viewersTimer);
+    };
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const scrollToCheckout = () => {
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' });
@@ -70,16 +95,16 @@ export default function App() {
     <div className="bg-brand-bg text-brand-ink min-h-screen font-sans grid grid-rows-[auto_1fr_auto]">
       
       {/* Header */}
-      <header className="border-b border-brand-faint px-[5vw] py-6 flex justify-between items-center">
+      <header className="border-b border-brand-faint px-[5vw] py-3 flex justify-between items-center">
         <img 
           src="https://i.ibb.co/6RbL522J/White-and-Teal-Minimalist-Automotive-Logo.png" 
           alt="StoveIT Logo" 
-          className="h-14 md:h-16 object-contain mix-blend-multiply"
+          className="h-10 md:h-12 object-contain mix-blend-multiply"
           referrerPolicy="no-referrer"
         />
         <button 
           onClick={scrollToCheckout}
-          className="bg-brand-accent text-brand-ink px-8 py-3 font-bold uppercase rounded-none hover:bg-orange-600 transition-colors"
+          className="bg-brand-accent text-brand-ink px-6 py-2 text-sm md:text-base font-bold uppercase rounded-none hover:bg-orange-600 transition-colors"
         >
           اطلب الآن
         </button>
@@ -97,6 +122,21 @@ export default function App() {
             <p className="text-xl mb-8 opacity-70">
               طاولة مع موقد خارجي قابلة للطي — خفيفة، عملية وسهلة الحمل في جميع مغامراتك.
             </p>
+            
+            <div className="mb-8 flex flex-col gap-4 border-r-4 border-brand-accent pr-5 py-2 bg-brand-faint/30">
+              <div className="flex items-center gap-2 text-brand-accent font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>ينتهي العرض بعد: <span className="font-mono text-xl mr-1" dir="ltr">{formatTime(timeLeft)}</span></span>
+              </div>
+              <div className="flex items-center gap-3 font-medium opacity-90">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span><strong className="text-lg">{viewers}</strong> أشخاص يشاهدون هذا المنتج الآن</span>
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-baseline gap-3">
                 <div className="text-5xl font-bold text-brand-accent font-heading">799 درهم</div>
@@ -104,7 +144,7 @@ export default function App() {
               </div>
               <button 
                 onClick={() => document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-brand-accent text-brand-bg hover:bg-brand-ink px-8 py-4 font-bold text-lg transition-colors cursor-pointer"
+                className="bg-brand-accent text-brand-bg hover:bg-brand-ink px-8 py-4 font-bold text-lg transition-colors cursor-pointer animate-shake"
               >
                 اطلب الآن
               </button>
