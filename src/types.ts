@@ -33,3 +33,20 @@ export interface ShoeFeature {
   title: string;
   description: string;
 }
+
+export interface ShoeColorImage {
+  url: string;
+  caption: string;
+  alt: string;
+  angleLabel?: string;
+}
+
+export interface ShoeColor {
+  id: string;
+  name: string;
+  colorLabel: string;
+  hex: string;
+  secondaryHex: string;
+  imageUrl: string;
+  images: ShoeColorImage[];
+}

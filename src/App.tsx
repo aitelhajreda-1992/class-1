@@ -15,9 +15,11 @@ import {
   Wind,
   Shield,
   HeartHandshake,
-  Loader2
+  Loader2,
+  ZoomIn
 } from 'lucide-react';
 import { OutdoorLogo } from './components/OutdoorLogo';
+import { ImageZoomModal } from './components/ImageZoomModal';
 import { SHOE_DETAILS, SHOE_FEATURES, REVIEWS, SIZE_CHART } from './data';
 import { FormDataState, FormErrorsState } from './types';
 
@@ -27,6 +29,7 @@ export default function App() {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
+  const [isZoomOpen, setIsZoomOpen] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<FormDataState>({
     name: '',
@@ -49,20 +52,33 @@ export default function App() {
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   
+  // Active color and per-color image gallery resolution
+  const activeColorIndex = Math.max(0, SHOE_DETAILS.colors.findIndex(c => c.name === selectedColor));
+  const activeColor = SHOE_DETAILS.colors[activeColorIndex] || SHOE_DETAILS.colors[0];
+  const activeColorImages = activeColor.images;
+  const currentImageIndex = activeImageIndex < activeColorImages.length ? activeImageIndex : 0;
+
+  const handleSelectColor = (colorName: string) => {
+    setSelectedColor(colorName);
+    setActiveImageIndex(0);
+  };
+
   // Timer & Viewers state
   const [timeLeft, setTimeLeft] = useState<number>(2 * 3600 + 18 * 60 + 45);
   const [viewers, setViewers] = useState<number>(6);
 
   useEffect(() => {
-    // Instant background preload of all shoe images in memory
-    SHOE_DETAILS.images.forEach((img, idx) => {
-      const imgObj = new Image();
-      imgObj.src = img.url;
-      imgObj.onload = () => {
-        setLoadedImages(prev => ({ ...prev, [idx]: true }));
-      };
+    // Instant background preload of all shoe images across all colors in memory
+    SHOE_DETAILS.colors.forEach(color => {
+      color.images.forEach(img => {
+        const imgObj = new Image();
+        imgObj.src = img.url;
+        imgObj.onload = () => {
+          setLoadedImages(prev => ({ ...prev, [img.url]: true }));
+        };
+      });
     });
 
     const timer = setInterval(() => {
@@ -175,8 +191,6 @@ export default function App() {
     }
   };
 
-  const activeImage = SHOE_DETAILS.images[activeImageIndex]?.url || SHOE_DETAILS.images[0].url;
-
   const renderFeatureIcon = (iconName: string) => {
     switch (iconName) {
       case 'Mountain':
@@ -230,28 +244,32 @@ export default function App() {
           <div className="lg:col-span-7 space-y-4">
             
             {/* Primary Image Stage */}
-            <div className="relative aspect-[4/3] sm:aspect-square w-full bg-slate-100 border border-brand-faint overflow-hidden group shadow-2xl rounded-sm">
+            <div 
+              onClick={() => setIsZoomOpen(true)}
+              className="relative aspect-square w-full bg-stone-100/90 border border-brand-faint overflow-hidden group shadow-2xl rounded-sm cursor-zoom-in"
+              title="انقر لتكبير وفحص تفاصيل الحذاء بدقة عالية"
+            >
               
               {/* Shimmer Placeholder while loading */}
-              {!loadedImages[activeImageIndex] && (
-                <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-brand-muted z-0">
+              {!loadedImages[activeColorImages[currentImageIndex]?.url] && (
+                <div className="absolute inset-0 bg-stone-100 flex flex-col items-center justify-center text-brand-muted z-0">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-accent mb-2" />
                   <span className="text-xs font-bold text-brand-muted">جاري عرض صورة الحذاء...</span>
                 </div>
               )}
 
-              {/* Stacked Pre-loaded Images with Zero-Latency Instant Switching */}
-              {SHOE_DETAILS.images.map((img, idx) => {
-                const isActive = activeImageIndex === idx;
+              {/* Stacked Pre-loaded Images for the SELECTED COLOR with Zero-Latency Instant Switching */}
+              {activeColorImages.map((img, idx) => {
+                const isActive = currentImageIndex === idx;
                 return (
                   <img 
-                    key={idx}
+                    key={`${activeColor.id}-${idx}-${img.url}`}
                     src={img.url} 
                     alt={img.alt}
                     loading={idx === 0 ? "eager" : "lazy"}
                     decoding="async"
-                    onLoad={() => setLoadedImages(prev => ({ ...prev, [idx]: true }))}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                    onLoad={() => setLoadedImages(prev => ({ ...prev, [img.url]: true }))}
+                    className={`absolute inset-0 w-full h-full object-contain p-2 sm:p-4 transition-opacity duration-300 ${
                       isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                     } group-hover:scale-105 transition-transform duration-700`}
                     referrerPolicy="no-referrer"
@@ -259,63 +277,122 @@ export default function App() {
                 );
               })}
 
-              {/* Badges on Image */}
+              {/* Zoom Trigger Button on Image */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsZoomOpen(true);
+                }}
+                className="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 bg-brand-surface/95 hover:bg-brand-surface text-brand-ink text-xs font-bold px-3 py-1.5 border border-brand-faint shadow-md backdrop-blur-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                aria-label="تكبير وفحص الحذاء"
+              >
+                <ZoomIn className="w-4 h-4 text-brand-accent" />
+                <span>تكبير وفحص الحذاء</span>
+              </button>
+
+              {/* Badges and Angle Indicator on Image */}
               <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                 <span className="bg-brand-bg/90 backdrop-blur-md border border-brand-accent text-brand-accent px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                  إصدار أصلي محدود
+                  {activeColor.colorLabel}
                 </span>
                 <span className="bg-red-600 text-white px-3 py-1 text-xs font-bold">
                   خصم {SHOE_DETAILS.discountPercentage}%
                 </span>
               </div>
 
-              {/* Image Navigation Arrows */}
-              <button 
-                onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : SHOE_DETAILS.images.length - 1))}
-                aria-label="Previous image"
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100 z-20"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => setActiveImageIndex((prev) => (prev < SHOE_DETAILS.images.length - 1 ? prev + 1 : 0))}
-                aria-label="Next image"
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100 z-20"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
+              {/* Image Counter Badge */}
+              <div className="absolute top-4 left-4 z-20">
+                <span className="bg-neutral-900/85 text-amber-400 border border-neutral-700 px-2.5 py-1 text-[11px] font-mono font-bold flex items-center gap-1 shadow-sm rounded-sm">
+                  <span>{currentImageIndex + 1}</span>
+                  <span className="text-neutral-500">/</span>
+                  <span>{activeColorImages.length}</span>
+                </span>
+              </div>
+
+              {/* Photo Dots Indicator on the Slider */}
+              {activeColorImages.length > 1 && (
+                <div className="absolute bottom-3 right-1/2 translate-x-1/2 z-20 flex items-center gap-1.5 bg-neutral-900/80 px-2.5 py-1 rounded-full backdrop-blur-sm border border-neutral-700/60">
+                  {activeColorImages.map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex(dotIdx);
+                      }}
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
+                        currentImageIndex === dotIdx 
+                          ? 'w-5 bg-amber-400' 
+                          : 'w-2 bg-neutral-400 hover:bg-neutral-200'
+                      }`}
+                      aria-label={`عرض الصورة ${dotIdx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Image Navigation Arrows (Cycles through photos of the current color) */}
+              {activeColorImages.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : activeColorImages.length - 1));
+                    }}
+                    aria-label="الصورة السابقة لهذا اللون"
+                    title="الصورة السابقة"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-brand-surface/85 hover:bg-brand-surface text-brand-ink p-2.5 border border-brand-faint transition-all opacity-85 hover:opacity-100 z-20 cursor-pointer shadow-md rounded-full"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev < activeColorImages.length - 1 ? prev + 1 : 0));
+                    }}
+                    aria-label="الصورة التالية لهذا اللون"
+                    title="الصورة التالية"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-brand-surface/85 hover:bg-brand-surface text-brand-ink p-2.5 border border-brand-faint transition-all opacity-85 hover:opacity-100 z-20 cursor-pointer shadow-md rounded-full"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
 
-            {/* Thumbnail Navigation Row - 3 Colors */}
+            {/* 3 Main Colors Selector Row - Directly Under Slider */}
             <div className="grid grid-cols-3 gap-3">
-              {SHOE_DETAILS.images.map((img, idx) => {
-                const isSelected = activeImageIndex === idx;
-                const colorInfo = SHOE_DETAILS.colors[idx];
+              {SHOE_DETAILS.colors.map((c) => {
+                const isSelected = selectedColor === c.name;
                 return (
                   <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveImageIndex(idx);
-                      if (colorInfo) {
-                        setSelectedColor(colorInfo.name);
-                      }
-                    }}
-                    className={`aspect-[4/3] sm:aspect-square border transition-all p-1 bg-brand-surface relative overflow-hidden group/thumb cursor-pointer ${
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSelectColor(c.name)}
+                    className={`aspect-square border transition-all p-1 bg-brand-surface relative overflow-hidden group/thumb cursor-pointer flex flex-col justify-between ${
                       isSelected 
-                        ? 'border-brand-accent ring-2 ring-brand-accent shadow-lg' 
-                        : 'border-brand-faint opacity-70 hover:opacity-100 hover:border-brand-border'
+                        ? 'border-brand-accent ring-2 ring-brand-accent shadow-lg bg-brand-accent/5' 
+                        : 'border-brand-faint opacity-75 hover:opacity-100 hover:border-brand-border'
                     }`}
                   >
-                    <img 
-                      src={img.url} 
-                      alt={img.caption} 
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-105" 
-                    />
-                    <div className="absolute bottom-0 inset-x-0 bg-brand-bg/90 backdrop-blur-sm py-1 px-1 text-center border-t border-brand-faint/60">
+                    <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={c.imageUrl} 
+                        alt={c.name} 
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover/thumb:scale-105" 
+                      />
+                      {isSelected && (
+                        <span className="absolute top-1 right-1 w-4 h-4 bg-brand-accent text-brand-bg rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div className="w-full bg-brand-bg/95 backdrop-blur-sm py-1 px-1 text-center border-t border-brand-faint/60">
                       <span className="text-[11px] font-bold text-brand-ink block truncate">
-                        {colorInfo?.colorLabel || img.caption}
+                        {c.colorLabel}
                       </span>
                     </div>
                   </button>
@@ -418,24 +495,21 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-3 gap-2.5">
-                {SHOE_DETAILS.colors.map((c, idx) => {
+                {SHOE_DETAILS.colors.map((c) => {
                   const isSelected = selectedColor === c.name;
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => {
-                        setSelectedColor(c.name);
-                        setActiveImageIndex(idx);
-                      }}
+                      onClick={() => handleSelectColor(c.name)}
                       className={`p-2 border text-right transition-all cursor-pointer relative flex flex-col gap-2 rounded-none ${
                         isSelected
                           ? 'border-brand-accent bg-brand-accent/15 ring-2 ring-brand-accent shadow-md'
                           : 'border-brand-faint bg-brand-surface hover:border-brand-border hover:bg-brand-surface-light'
                       }`}
                     >
-                      <div className="aspect-[4/3] w-full overflow-hidden border border-brand-faint/80 relative">
-                        <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                      <div className="aspect-[4/3] w-full overflow-hidden border border-brand-faint/80 relative bg-stone-100">
+                        <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-contain p-1" />
                         {isSelected && (
                           <span className="absolute top-1 right-1 w-4 h-4 bg-brand-accent text-brand-bg rounded-full flex items-center justify-center text-[10px] font-bold">
                             ✓
@@ -447,7 +521,7 @@ export default function App() {
                           {c.colorLabel}
                         </span>
                         <span className="text-[10px] text-brand-muted block truncate mt-0.5">
-                          {c.id === 'stealth-black' ? 'فحمي كربوني' : c.id === 'ice-grey' ? 'رمادي ثلجي' : 'بيج صحراوي'}
+                          {c.id === 'stealth-black' ? 'فحمي كربوني' : c.id === 'ice-grey' ? 'رمادي ثلجي' : 'أخضر زيتي'}
                         </span>
                       </div>
                     </button>
@@ -802,27 +876,24 @@ export default function App() {
                     <span className="text-brand-accent font-bold text-xs">{selectedColor}</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {SHOE_DETAILS.colors.map((c, idx) => {
+                    {SHOE_DETAILS.colors.map((c) => {
                       const isSelected = selectedColor === c.name;
                       return (
                         <button
                           key={c.id}
                           type="button"
-                          onClick={() => {
-                            setSelectedColor(c.name);
-                            setActiveImageIndex(idx);
-                          }}
+                          onClick={() => handleSelectColor(c.name)}
                           className={`p-2 border text-right transition-all cursor-pointer flex items-center gap-2 ${
                             isSelected
                               ? 'border-brand-accent bg-brand-accent/15 ring-1 ring-brand-accent'
                               : 'border-brand-faint bg-brand-bg hover:border-brand-border'
                           }`}
                         >
-                          <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-9 h-9 object-cover border border-brand-faint shrink-0" />
+                          <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-9 h-9 object-contain p-0.5 bg-stone-100 border border-brand-faint shrink-0" />
                           <div className="min-w-0">
                             <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
                             <span className="text-[10px] text-brand-muted block truncate">
-                              {c.id === 'stealth-black' ? 'فحمي' : c.id === 'ice-grey' ? 'رمادي' : 'صحراوي'}
+                              {c.id === 'stealth-black' ? 'فحمي' : c.id === 'ice-grey' ? 'رمادي' : 'أخضر'}
                             </span>
                           </div>
                         </button>
@@ -974,6 +1045,24 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Interactive Fullscreen Image Zoom Lightbox Modal */}
+      <ImageZoomModal
+        isOpen={isZoomOpen}
+        onClose={() => setIsZoomOpen(false)}
+        images={activeColorImages}
+        colorName={activeColor.name}
+        colorLabel={activeColor.colorLabel}
+        activeIndex={currentImageIndex}
+        onSelectIndex={(idx) => setActiveImageIndex(idx)}
+        colors={SHOE_DETAILS.colors}
+        activeColorIndex={activeColorIndex}
+        onSelectColorIndex={(cIdx) => {
+          if (SHOE_DETAILS.colors[cIdx]) {
+            handleSelectColor(SHOE_DETAILS.colors[cIdx].name);
+          }
+        }}
+      />
 
     </div>
   );

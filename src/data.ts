@@ -1,6 +1,21 @@
-import { ShoeReview, ShoeFeature } from './types';
+import { ShoeReview, ShoeFeature, ShoeColor } from './types';
 
-export const SHOE_DETAILS = {
+export const SHOE_DETAILS: {
+  name: string;
+  arabicName: string;
+  tagline: string;
+  arabicTagline: string;
+  price: number;
+  originalPrice: number;
+  discountPercentage: number;
+  twoPairsPrice: number;
+  twoPairsDiscount: number;
+  currency: string;
+  deliveryTime: string;
+  defaultSize: number;
+  sizes: { size: number; footLength: string; inStock: boolean; stockLeft: number }[];
+  colors: ShoeColor[];
+} = {
   name: "OUTDOOR SPORTS Trail Trekker Pro",
   arabicName: "حذاء المغامرات والمسارات الوعرة OUTDOOR SPORTS",
   tagline: "Comfort • Style • Adventure",
@@ -28,7 +43,27 @@ export const SHOE_DETAILS = {
       colorLabel: "أسود كربوني",
       hex: "#1F2124", 
       secondaryHex: "#3E4347",
-      imageUrl: "https://i.ibb.co/F4LrczqB/Gemini-Generated-Image-82s1gl82s1gl82s1.jpg"
+      imageUrl: "https://i.ibb.co/F4LrczqB/Gemini-Generated-Image-82s1gl82s1gl82s1.jpg",
+      images: [
+        {
+          url: "https://i.ibb.co/F4LrczqB/Gemini-Generated-Image-82s1gl82s1gl82s1.jpg",
+          caption: "اللون الأسود الفحمي - المنظر الرئيسي الجانبي",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - أسود كربوني منظر جانبي",
+          angleLabel: "منظر جانبي"
+        },
+        {
+          url: "https://i.ibb.co/HLxGQ6Y9/Gemini-Generated-Image-81s3xo81s3xo81s3.jpg",
+          caption: "اللون الأسود الفحمي - تفاصيل النعل والمقدمة المقواة",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - أسود كربوني تفاصيل النعل",
+          angleLabel: "زاوية أمامية"
+        },
+        {
+          url: "https://i.ibb.co/CpwLyMm4/Gemini-Generated-Image-nehaoknehaokneha.jpg",
+          caption: "اللون الأسود الفحمي - زاوية علوية ونسيج التهوية",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - أسود كربوني زاوية علوية",
+          angleLabel: "زاوية علوية"
+        }
+      ]
     },
     { 
       id: "ice-grey", 
@@ -36,36 +71,50 @@ export const SHOE_DETAILS = {
       colorLabel: "رمادي ثلجي",
       hex: "#D4D2CB", 
       secondaryHex: "#8E8B83",
-      imageUrl: "https://i.ibb.co/spLvQ5qz/Gemini-Generated-Image-rkymnerkymnerkym.jpg"
+      imageUrl: "https://i.ibb.co/spLvQ5qz/Gemini-Generated-Image-rkymnerkymnerkym.jpg",
+      images: [
+        {
+          url: "https://i.ibb.co/spLvQ5qz/Gemini-Generated-Image-rkymnerkymnerkym.jpg",
+          caption: "اللون الرمادي الثلجي - المنظر الجانبي الأنيق",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - رمادي ثلجي منظر جانبي",
+          angleLabel: "منظر جانبي"
+        },
+        {
+          url: "https://i.ibb.co/dsYN55pF/Gemini-Generated-Image-mpt7efmpt7efmpt7.jpg",
+          caption: "اللون الرمادي الثلجي - زاوية أمامية ثلاثية الأبعاد",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - رمادي ثلجي زاوية أمامية",
+          angleLabel: "زاوية أمامية"
+        },
+        {
+          url: "https://i.ibb.co/q3yQh1dt/Gemini-Generated-Image-rxy4i0rxy4i0rxy4.jpg",
+          caption: "اللون الرمادي الثلجي - تفاصيل النسيج التنفسي والدعامات",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - رمادي ثلجي تفاصيل النسيج",
+          angleLabel: "تفاصيل النسيج"
+        }
+      ]
     },
     { 
-      id: "desert-khaki", 
-      name: "بيج صحراوي كاكي (Desert Khaki)", 
-      colorLabel: "كاكي صحراوي",
-      hex: "#C4A77D", 
-      secondaryHex: "#5E6953",
-      imageUrl: "https://i.ibb.co/dJ0JDy5T/IMG-20260919-WA0003.jpg"
+      id: "army-green", 
+      name: "أخضر زيتي جبلي (Army Green)", 
+      colorLabel: "أخضر زيتي",
+      hex: "#4E5B4B", 
+      secondaryHex: "#2F3B2D",
+      imageUrl: "https://i.ibb.co/dJ0JDy5T/IMG-20260919-WA0003.jpg",
+      images: [
+        {
+          url: "https://i.ibb.co/dJ0JDy5T/IMG-20260919-WA0003.jpg",
+          caption: "اللون الأخضر الزيتي - المنظر الجانبي الرياضي",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - أخضر زيتي منظر جانبي",
+          angleLabel: "منظر جانبي"
+        },
+        {
+          url: "https://i.ibb.co/N60K6v0F/green-upload.jpg",
+          caption: "اللون الأخضر الزيتي - تفاصيل النعل والزاوية المقربة",
+          alt: "OUTDOOR SPORTS حذاء المغامرات - أخضر زيتي زاوية مقربة",
+          angleLabel: "زاوية مقربة"
+        }
+      ]
     },
-  ],
-  images: [
-    {
-      url: "https://i.ibb.co/F4LrczqB/Gemini-Generated-Image-82s1gl82s1gl82s1.jpg",
-      caption: "اللون الأسود الفحمي الكربوني (Stealth Black)",
-      alt: "OUTDOOR SPORTS حذاء المغامرات - أسود كربوني",
-      colorId: "stealth-black"
-    },
-    {
-      url: "https://i.ibb.co/spLvQ5qz/Gemini-Generated-Image-rkymnerkymnerkym.jpg",
-      caption: "اللون الرمادي الثلجي الفاتح (Ice Grey)",
-      alt: "OUTDOOR SPORTS حذاء المغامرات - رمادي ثلجي",
-      colorId: "ice-grey"
-    },
-    {
-      url: "https://i.ibb.co/dJ0JDy5T/IMG-20260919-WA0003.jpg",
-      caption: "اللون البيج الصحراوي الكاكي (Desert Khaki)",
-      alt: "OUTDOOR SPORTS حذاء المغامرات - كاكي صحراوي",
-      colorId: "desert-khaki"
-    }
   ]
 };
 
