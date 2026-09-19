@@ -6,6 +6,8 @@ export interface FormDataState {
   size: number;
   quantity: number;
   color: string;
+  size2?: number;
+  color2?: string;
   notes?: string;
 }
 

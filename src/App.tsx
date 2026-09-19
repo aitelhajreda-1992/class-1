@@ -23,9 +23,18 @@ import { ImageZoomModal } from './components/ImageZoomModal';
 import { SHOE_DETAILS, SHOE_FEATURES, REVIEWS, SIZE_CHART } from './data';
 import { FormDataState, FormErrorsState } from './types';
 
+// رابط Google Apps Script لإرسال الطلبات إلى Google Sheet
+const GOOGLE_SHEET_WEBAPP_URL = 
+  (import.meta as any).env?.VITE_GOOGLE_SHEET_URL || 
+  'https://script.google.com/macros/s/AKfycbw9c-HeyFN0p-FQ4xhL-Jvx_kTufAHLx46Z_z1Ly0Bykko3pH5pMewPWb8WJT_YK2-iYg/exec';
+
 export default function App() {
   const [selectedSize, setSelectedSize] = useState<number>(SHOE_DETAILS.defaultSize);
   const [selectedColor, setSelectedColor] = useState<string>(SHOE_DETAILS.colors[0].name);
+  const [selectedSize2, setSelectedSize2] = useState<number>(SHOE_DETAILS.defaultSize);
+  const [selectedColor2, setSelectedColor2] = useState<string>(
+    SHOE_DETAILS.colors[1]?.name || SHOE_DETAILS.colors[0].name
+  );
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
@@ -39,6 +48,8 @@ export default function App() {
     size: SHOE_DETAILS.defaultSize,
     quantity: 1,
     color: SHOE_DETAILS.colors[0].name,
+    size2: SHOE_DETAILS.defaultSize,
+    color2: SHOE_DETAILS.colors[1]?.name || SHOE_DETAILS.colors[0].name,
     notes: ''
   });
 
@@ -99,15 +110,17 @@ export default function App() {
     };
   }, []);
 
-  // Synchronize size and quantity with form data
+  // Synchronize size, color and quantity with form data
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
       size: selectedSize,
       quantity: quantity,
-      color: selectedColor
+      color: selectedColor,
+      size2: quantity === 2 ? selectedSize2 : undefined,
+      color2: quantity === 2 ? selectedColor2 : undefined
     }));
-  }, [selectedSize, quantity, selectedColor]);
+  }, [selectedSize, quantity, selectedColor, selectedSize2, selectedColor2]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -162,20 +175,32 @@ export default function App() {
     if (validateForm()) {
       setIsSubmitting(true);
       try {
+        const productDetails = formData.quantity === 2
+          ? `2 أزواج [ الزوج 1: ${formData.color} (مقاس ${formData.size} EU) + الزوج 2: ${formData.color2} (مقاس ${formData.size2} EU) ]`
+          : `زوج واحد [ اللون: ${formData.color} | المقاس: ${formData.size} EU ]`;
+
         const payload = {
-          fullName: formData.name,
-          phone: formData.phone,
-          city: formData.city,
-          address: formData.address,
-          shoeSize: formData.size,
+          // الأعمدة الـ 5 المطابقة تماماً لجدولك (A إلى E)
+          fullName: formData.name,       // عمود A: الاسم الكامل
+          phone: formData.phone,         // عمود B: رقم الهاتف
+          city: formData.city,           // عمود C: المدينة
+          address: formData.address,     // عمود D: العنوان
+          productDetails: productDetails,// عمود E: تفاصيل المنتج (اللون ، المقاس ، الكمية)
+
+          // بيانات إضافية في حال رغبت بها
           quantity: formData.quantity,
-          color: formData.color,
+          shoeSize: formData.quantity === 2 
+            ? `الزوج 1: ${formData.size} EU | الزوج 2: ${formData.size2} EU` 
+            : `${formData.size} EU`,
+          color: formData.quantity === 2 
+            ? `الزوج 1: ${formData.color} | الزوج 2: ${formData.color2}` 
+            : formData.color,
           totalPrice: `${calculateTotalPrice()} ${SHOE_DETAILS.currency}`,
           product: "حذاء OUTDOOR SPORTS الجبلي",
           orderDate: new Date().toLocaleString('ar-MA')
         };
 
-        await fetch('https://script.google.com/macros/s/AKfycbxDzEe9HXeBTy5k-CiG2zxjZBTfleRQDd86nPDZbhn8zLFLQKYk5z8-98J2yi1dtHdlCw/exec', {
+        await fetch(GOOGLE_SHEET_WEBAPP_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: {
@@ -231,7 +256,7 @@ export default function App() {
 
         <button 
           onClick={scrollToCheckout}
-          className="bg-brand-accent hover:bg-brand-accent-hover text-white px-5 md:px-7 py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand-accent/20 cursor-pointer flex items-center gap-2"
+          className="animate-shake bg-brand-accent hover:bg-brand-accent-hover text-white px-5 md:px-7 py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider transition-colors duration-200 shadow-md shadow-brand-accent/20 cursor-pointer flex items-center gap-2"
         >
           <span>اطلب الآن</span>
           <span className="text-xs opacity-90 hidden sm:inline">({SHOE_DETAILS.price} {SHOE_DETAILS.currency})</span>
@@ -406,38 +431,13 @@ export default function App() {
               })}
             </div>
 
-            {/* Quality Badges */}
-            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-brand-faint text-center">
-              <div className="p-3 bg-brand-surface/60 border border-brand-faint/60">
-                <Truck className="w-5 h-5 mx-auto text-brand-accent mb-1" />
-                <span className="text-xs font-bold block">شحن مجاني</span>
-                <span className="text-[11px] text-brand-muted">24-48 ساعة</span>
-              </div>
-              <div className="p-3 bg-brand-surface/60 border border-brand-faint/60">
-                <ShieldCheck className="w-5 h-5 mx-auto text-brand-accent mb-1" />
-                <span className="text-xs font-bold block">دفع عند الاستلام</span>
-                <span className="text-[11px] text-brand-muted">أداء نقدي آمن</span>
-              </div>
-              <div className="p-3 bg-brand-surface/60 border border-brand-faint/60">
-                <Ruler className="w-5 h-5 mx-auto text-brand-accent mb-1" />
-                <span className="text-xs font-bold block">استبدال سهل</span>
-                <span className="text-[11px] text-brand-muted">إذا لم يناسبك المقاس</span>
-              </div>
-            </div>
-
           </div>
 
           {/* Right Column: Title, Sizing & Immediate Action (Desktop col-span-5) */}
           <div className="lg:col-span-5 space-y-6">
             
-            {/* Tagline & Slogan */}
+            {/* Title & Description */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-brand-surface border border-brand-border px-3 py-1 mb-3">
-                <span className="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span>
-                <span className="text-xs font-mono uppercase tracking-widest text-brand-accent font-bold">
-                  Comfort • Style • Adventure
-                </span>
-              </div>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-ink leading-tight">
                 {SHOE_DETAILS.arabicName}
               </h1>
@@ -491,12 +491,9 @@ export default function App() {
 
             {/* 3 Color Variants Selector */}
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-brand-ink flex items-center gap-2">
-                  <span>الألوان المتوفرة (3 ألوان أصلية):</span>
-                </span>
-                <span className="text-xs text-brand-accent font-bold">
-                  {selectedColor}
+              <div className="flex items-center">
+                <span className="text-sm font-bold text-brand-ink">
+                  الألوان المتوفرة (3 ألوان أصلية):
                 </span>
               </div>
 
@@ -794,17 +791,46 @@ export default function App() {
                     <span className="font-bold text-brand-ink">حذاء OUTDOOR SPORTS الجبلي</span>
                   </div>
                   <div className="flex justify-between border-b border-brand-faint pb-2">
-                    <span className="text-brand-muted">المقاس المختار:</span>
-                    <span className="font-bold text-brand-accent">{formData.size} EU</span>
+                    <span className="text-brand-muted">الكمية المطلوبة:</span>
+                    <span className="font-bold text-brand-ink">{formData.quantity} {formData.quantity === 1 ? 'زوج حذاء' : 'أزواج أحذية'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-brand-faint pb-2">
-                    <span className="text-brand-muted">اللون المختار:</span>
-                    <span className="font-bold text-brand-accent">{formData.color}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-brand-faint pb-2">
-                    <span className="text-brand-muted">الكمية:</span>
-                    <span className="font-bold text-brand-ink">{formData.quantity} زوج</span>
-                  </div>
+
+                  {formData.quantity === 1 ? (
+                    <>
+                      <div className="flex justify-between border-b border-brand-faint pb-2">
+                        <span className="text-brand-muted">اللون المختار:</span>
+                        <span className="font-bold text-brand-accent">{formData.color}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-brand-faint pb-2">
+                        <span className="text-brand-muted">المقاس المختار:</span>
+                        <span className="font-bold text-brand-accent">{formData.size} EU</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="border-b border-brand-faint pb-2.5 pt-1 space-y-1 bg-brand-surface/60 p-2.5">
+                        <div className="flex justify-between font-bold text-brand-ink text-xs">
+                          <span>👟 تفاصيل الزوج الأول:</span>
+                          <span className="text-brand-accent font-mono">{formData.size} EU</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-brand-muted">
+                          <span>اللون:</span>
+                          <span className="font-bold text-brand-accent">{formData.color}</span>
+                        </div>
+                      </div>
+                      <div className="border-b border-brand-faint pb-2.5 pt-1 space-y-1 bg-brand-surface/60 p-2.5">
+                        <div className="flex justify-between font-bold text-brand-ink text-xs">
+                          <span>👟 تفاصيل الزوج الثاني:</span>
+                          <span className="text-brand-accent font-mono">{formData.size2} EU</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-brand-muted">
+                          <span>اللون:</span>
+                          <span className="font-bold text-brand-accent">{formData.color2}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <div className="flex justify-between pt-1">
                     <span className="text-brand-muted">المبلغ الإجمالي عند الاستلام:</span>
                     <span className="font-bold text-brand-accent text-base">{calculateTotalPrice()} {SHOE_DETAILS.currency} (توصيل مجاني)</span>
@@ -875,62 +901,209 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Form Color Picker */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-brand-ink flex justify-between items-center">
-                    <span>اللون المطلوب:</span>
-                    <span className="text-brand-accent font-bold text-xs">{selectedColor}</span>
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {SHOE_DETAILS.colors.map((c) => {
-                      const isSelected = selectedColor === c.name;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => handleSelectColor(c.name)}
-                          className={`p-2 border text-right transition-all cursor-pointer flex items-center gap-2 ${
-                            isSelected
-                              ? 'border-brand-accent bg-brand-accent/15 ring-1 ring-brand-accent'
-                              : 'border-brand-faint bg-brand-bg hover:border-brand-border'
-                          }`}
-                        >
-                          <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-9 h-9 object-contain p-0.5 bg-stone-100 border border-brand-faint shrink-0" />
-                          <div className="min-w-0">
-                            <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
-                            <span className="text-[10px] text-brand-muted block truncate">
-                              {c.id === 'stealth-black' ? 'فحمي' : c.id === 'ice-grey' ? 'رمادي' : 'أخضر'}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Form Color & Size Selection */}
+                {quantity === 1 ? (
+                  <div className="space-y-4">
+                    {/* Form Color Picker */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-brand-ink flex justify-between items-center">
+                        <span>اللون المطلوب:</span>
+                        <span className="text-brand-accent font-bold text-xs">
+                          {SHOE_DETAILS.colors.find(c => c.name === selectedColor)?.colorLabel || selectedColor}
+                        </span>
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {SHOE_DETAILS.colors.map((c) => {
+                          const isSelected = selectedColor === c.name;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => handleSelectColor(c.name)}
+                              className={`p-2 border text-right transition-all cursor-pointer flex items-center gap-2 ${
+                                isSelected
+                                  ? 'border-brand-accent bg-brand-accent/15 ring-1 ring-brand-accent'
+                                  : 'border-brand-faint bg-brand-bg hover:border-brand-border'
+                              }`}
+                            >
+                              <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-9 h-9 object-contain p-0.5 bg-stone-100 border border-brand-faint shrink-0" />
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
+                                <span className="text-[10px] text-brand-muted block truncate">
+                                  {c.id === 'stealth-black' ? 'فحمي' : c.id === 'ice-grey' ? 'رمادي' : 'أخضر'}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                {/* Form Size Picker Check */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-brand-ink flex justify-between">
-                    <span>المقاس المطلوب:</span>
-                    <span className="text-brand-accent font-mono font-bold">{selectedSize} EU</span>
-                  </label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {SHOE_DETAILS.sizes.map((s) => (
-                      <button
-                        key={s.size}
-                        type="button"
-                        onClick={() => setSelectedSize(s.size)}
-                        className={`py-2 text-center text-sm font-bold border transition-colors cursor-pointer ${
-                          selectedSize === s.size 
-                            ? 'bg-brand-accent text-brand-bg border-brand-accent font-heading' 
-                            : 'bg-brand-bg text-brand-muted border-brand-faint hover:text-brand-ink hover:border-brand-border'
-                        }`}
-                      >
-                        {s.size}
-                      </button>
-                    ))}
+                    {/* Form Size Picker Check */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-brand-ink flex justify-between">
+                        <span>المقاس المطلوب:</span>
+                        <span className="text-brand-accent font-mono font-bold">{selectedSize} EU</span>
+                      </label>
+                      <div className="grid grid-cols-6 gap-2">
+                        {SHOE_DETAILS.sizes.map((s) => (
+                          <button
+                            key={s.size}
+                            type="button"
+                            onClick={() => setSelectedSize(s.size)}
+                            className={`py-2 text-center text-sm font-bold border transition-colors cursor-pointer ${
+                              selectedSize === s.size 
+                                ? 'bg-brand-accent text-brand-bg border-brand-accent font-heading' 
+                                : 'bg-brand-bg text-brand-muted border-brand-faint hover:text-brand-ink hover:border-brand-border'
+                            }`}
+                          >
+                            {s.size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-5 animate-fadeIn">
+                    <div className="bg-brand-accent/10 border border-brand-accent/30 p-3 flex items-center justify-between text-xs">
+                      <span className="font-bold text-brand-ink flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-brand-accent shrink-0" />
+                        <span>عرض خاص: حدد لون ومقاس كل حذاء حسب رغبتك!</span>
+                      </span>
+                      <span className="bg-brand-accent text-white px-2 py-0.5 font-bold font-mono text-[10px]">2 أزواج</span>
+                    </div>
+
+                    {/* Pair 1 Choice */}
+                    <div className="p-4 bg-brand-bg border-2 border-brand-accent/40 relative space-y-3.5">
+                      <div className="flex items-center justify-between border-b border-brand-border/60 pb-2">
+                        <span className="font-heading font-extrabold text-brand-ink text-sm sm:text-base flex items-center gap-2">
+                          <span className="w-5 h-5 bg-brand-accent text-white rounded-full flex items-center justify-center text-xs font-bold font-mono">1</span>
+                          <span>الزوج الأول (الحذاء رقم 1)</span>
+                        </span>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-brand-muted">المقاس:</span>
+                          <span className="font-mono font-bold text-brand-accent">{selectedSize} EU</span>
+                        </div>
+                      </div>
+
+                      {/* Pair 1 Color */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-ink flex justify-between">
+                          <span>لون الحذاء الأول:</span>
+                          <span className="text-brand-accent font-bold text-xs">
+                            {SHOE_DETAILS.colors.find(c => c.name === selectedColor)?.colorLabel || selectedColor}
+                          </span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {SHOE_DETAILS.colors.map((c) => {
+                            const isSelected = selectedColor === c.name;
+                            return (
+                              <button
+                                key={`p1-${c.id}`}
+                                type="button"
+                                onClick={() => handleSelectColor(c.name)}
+                                className={`p-2 border text-right transition-all cursor-pointer flex items-center gap-2 ${
+                                  isSelected
+                                    ? 'border-brand-accent bg-brand-accent/15 ring-1 ring-brand-accent'
+                                    : 'border-brand-faint bg-brand-surface hover:border-brand-border'
+                                }`}
+                              >
+                                <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-8 h-8 object-contain p-0.5 bg-stone-100 border border-brand-faint shrink-0" />
+                                <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Pair 1 Size */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-ink block">مقاس الحذاء الأول:</label>
+                        <div className="grid grid-cols-6 gap-2">
+                          {SHOE_DETAILS.sizes.map((s) => (
+                            <button
+                              key={`p1-size-${s.size}`}
+                              type="button"
+                              onClick={() => setSelectedSize(s.size)}
+                              className={`py-2 text-center text-sm font-bold border transition-colors cursor-pointer ${
+                                selectedSize === s.size 
+                                  ? 'bg-brand-accent text-brand-bg border-brand-accent font-heading' 
+                                  : 'bg-brand-surface text-brand-muted border-brand-faint hover:text-brand-ink hover:border-brand-border'
+                              }`}
+                            >
+                              {s.size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pair 2 Choice */}
+                    <div className="p-4 bg-brand-bg border-2 border-brand-accent/40 relative space-y-3.5">
+                      <div className="flex items-center justify-between border-b border-brand-border/60 pb-2">
+                        <span className="font-heading font-extrabold text-brand-ink text-sm sm:text-base flex items-center gap-2">
+                          <span className="w-5 h-5 bg-brand-accent text-white rounded-full flex items-center justify-center text-xs font-bold font-mono">2</span>
+                          <span>الزوج الثاني (الحذاء رقم 2)</span>
+                        </span>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-brand-muted">المقاس:</span>
+                          <span className="font-mono font-bold text-brand-accent">{selectedSize2} EU</span>
+                        </div>
+                      </div>
+
+                      {/* Pair 2 Color */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-ink flex justify-between">
+                          <span>لون الحذاء الثاني:</span>
+                          <span className="text-brand-accent font-bold text-xs">
+                            {SHOE_DETAILS.colors.find(c => c.name === selectedColor2)?.colorLabel || selectedColor2}
+                          </span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {SHOE_DETAILS.colors.map((c) => {
+                            const isSelected = selectedColor2 === c.name;
+                            return (
+                              <button
+                                key={`p2-${c.id}`}
+                                type="button"
+                                onClick={() => setSelectedColor2(c.name)}
+                                className={`p-2 border text-right transition-all cursor-pointer flex items-center gap-2 ${
+                                  isSelected
+                                    ? 'border-brand-accent bg-brand-accent/15 ring-1 ring-brand-accent'
+                                    : 'border-brand-faint bg-brand-surface hover:border-brand-border'
+                                }`}
+                              >
+                                <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-8 h-8 object-contain p-0.5 bg-stone-100 border border-brand-faint shrink-0" />
+                                <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Pair 2 Size */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-brand-ink block">مقاس الحذاء الثاني:</label>
+                        <div className="grid grid-cols-6 gap-2">
+                          {SHOE_DETAILS.sizes.map((s) => (
+                            <button
+                              key={`p2-size-${s.size}`}
+                              type="button"
+                              onClick={() => setSelectedSize2(s.size)}
+                              className={`py-2 text-center text-sm font-bold border transition-colors cursor-pointer ${
+                                selectedSize2 === s.size 
+                                  ? 'bg-brand-accent text-brand-bg border-brand-accent font-heading' 
+                                  : 'bg-brand-surface text-brand-muted border-brand-faint hover:text-brand-ink hover:border-brand-border'
+                              }`}
+                            >
+                              {s.size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Full Name */}
                 <div className="space-y-1.5">
@@ -993,14 +1166,32 @@ export default function App() {
                 </div>
 
                 {/* Summary Box */}
-                <div className="p-4 bg-brand-bg border border-brand-faint flex items-center justify-between text-sm">
-                  <span className="text-brand-muted">المجموع الإجمالي المؤكد:</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-heading font-extrabold text-2xl text-brand-accent">
-                      {calculateTotalPrice()}
-                    </span>
-                    <span className="font-bold text-brand-accent">{SHOE_DETAILS.currency}</span>
-                    <span className="text-xs text-emerald-700 font-bold mr-2">(توصيل مجاني)</span>
+                <div className="p-4 bg-brand-bg border border-brand-faint space-y-2.5 text-sm">
+                  {quantity === 2 && (
+                    <div className="pb-2.5 border-b border-brand-faint space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-brand-muted font-medium">الزوج الأول:</span>
+                        <span className="font-bold text-brand-ink">
+                          {SHOE_DETAILS.colors.find(c => c.name === selectedColor)?.colorLabel || selectedColor} — <span className="text-brand-accent font-mono">{selectedSize} EU</span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-brand-muted font-medium">الزوج الثاني:</span>
+                        <span className="font-bold text-brand-ink">
+                          {SHOE_DETAILS.colors.find(c => c.name === selectedColor2)?.colorLabel || selectedColor2} — <span className="text-brand-accent font-mono">{selectedSize2} EU</span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-brand-muted">المجموع الإجمالي المؤكد:</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-heading font-extrabold text-2xl text-brand-accent">
+                        {calculateTotalPrice()}
+                      </span>
+                      <span className="font-bold text-brand-accent">{SHOE_DETAILS.currency}</span>
+                      <span className="text-xs text-emerald-700 font-bold mr-2">(توصيل مجاني)</span>
+                    </div>
                   </div>
                 </div>
 

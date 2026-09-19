@@ -18,13 +18,31 @@
 }
 
 @keyframes shake {
-  0%, 80%, 100% { transform: translateX(0); }
-  82%, 86%, 90%, 94%, 98% { transform: translateX(-4px); }
-  84%, 88%, 92%, 96% { transform: translateX(4px); }
+  0%, 60%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  65% {
+    transform: translateX(-4px) rotate(-1.5deg);
+  }
+  70% {
+    transform: translateX(4px) rotate(1.5deg);
+  }
+  75% {
+    transform: translateX(-4px) rotate(-1.5deg);
+  }
+  80% {
+    transform: translateX(4px) rotate(1.5deg);
+  }
+  85% {
+    transform: translateX(-2px) rotate(-0.8deg);
+  }
+  90% {
+    transform: translateX(2px) rotate(0.8deg);
+  }
 }
 
 .animate-shake {
-  animation: shake 3s cubic-bezier(.36,.07,.19,.97) infinite;
+  animation: shake 2.5s ease-in-out infinite;
 }
 
 /* Custom scrollbar */
