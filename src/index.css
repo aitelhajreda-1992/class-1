@@ -1,14 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-bg: #F9F8F6;
-  --color-brand-ink: #111113;
-  --color-brand-accent: #FF4D00;
-  --color-brand-faint: rgba(17, 17, 19, 0.1);
+  --color-brand-bg: #FFFFFF;
+  --color-brand-surface: #F8FAFC;
+  --color-brand-surface-light: #F1F5F9;
+  --color-brand-ink: #0F172A;
+  --color-brand-muted: #526071;
+  --color-brand-accent: #8E6827;
+  --color-brand-accent-hover: #75541A;
+  --color-brand-sage: #2D5A3A;
+  --color-brand-faint: rgba(15, 23, 42, 0.09);
+  --color-brand-border: rgba(142, 104, 39, 0.35);
 
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Cairo', 'Inter', system-ui, sans-serif;
   --font-mono: 'Space Mono', monospace;
-  --font-heading: 'Oswald', sans-serif;
+  --font-heading: 'Oswald', 'Cairo', sans-serif;
 }
 
 @keyframes shake {
@@ -19,4 +25,19 @@
 
 .animate-shake {
   animation: shake 3s cubic-bezier(.36,.07,.19,.97) infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8E6827;
 }
