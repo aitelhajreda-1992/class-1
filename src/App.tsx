@@ -14,7 +14,8 @@ import {
   Mountain,
   Wind,
   Shield,
-  HeartHandshake
+  HeartHandshake,
+  Loader2
 } from 'lucide-react';
 import { OutdoorLogo } from './components/OutdoorLogo';
 import { SHOE_DETAILS, SHOE_FEATURES, REVIEWS, SIZE_CHART } from './data';
@@ -48,12 +49,22 @@ export default function App() {
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   
   // Timer & Viewers state
   const [timeLeft, setTimeLeft] = useState<number>(2 * 3600 + 18 * 60 + 45);
   const [viewers, setViewers] = useState<number>(6);
 
   useEffect(() => {
+    // Instant background preload of all shoe images in memory
+    SHOE_DETAILS.images.forEach((img, idx) => {
+      const imgObj = new Image();
+      imgObj.src = img.url;
+      imgObj.onload = () => {
+        setLoadedImages(prev => ({ ...prev, [idx]: true }));
+      };
+    });
+
     const timer = setInterval(() => {
       setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -219,16 +230,37 @@ export default function App() {
           <div className="lg:col-span-7 space-y-4">
             
             {/* Primary Image Stage */}
-            <div className="relative aspect-[4/3] sm:aspect-square w-full bg-brand-surface border border-brand-faint overflow-hidden group shadow-2xl rounded-sm">
-              <img 
-                src={activeImage} 
-                alt="OUTDOOR SPORTS حذاء المغامرات"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
+            <div className="relative aspect-[4/3] sm:aspect-square w-full bg-slate-100 border border-brand-faint overflow-hidden group shadow-2xl rounded-sm">
+              
+              {/* Shimmer Placeholder while loading */}
+              {!loadedImages[activeImageIndex] && (
+                <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-brand-muted z-0">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-accent mb-2" />
+                  <span className="text-xs font-bold text-brand-muted">جاري عرض صورة الحذاء...</span>
+                </div>
+              )}
+
+              {/* Stacked Pre-loaded Images with Zero-Latency Instant Switching */}
+              {SHOE_DETAILS.images.map((img, idx) => {
+                const isActive = activeImageIndex === idx;
+                return (
+                  <img 
+                    key={idx}
+                    src={img.url} 
+                    alt={img.alt}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    onLoad={() => setLoadedImages(prev => ({ ...prev, [idx]: true }))}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                    } group-hover:scale-105 transition-transform duration-700`}
+                    referrerPolicy="no-referrer"
+                  />
+                );
+              })}
 
               {/* Badges on Image */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                 <span className="bg-brand-bg/90 backdrop-blur-md border border-brand-accent text-brand-accent px-3 py-1 text-xs font-bold uppercase tracking-wider">
                   إصدار أصلي محدود
                 </span>
@@ -241,14 +273,14 @@ export default function App() {
               <button 
                 onClick={() => setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : SHOE_DETAILS.images.length - 1))}
                 aria-label="Previous image"
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100"
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100 z-20"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
               <button 
                 onClick={() => setActiveImageIndex((prev) => (prev < SHOE_DETAILS.images.length - 1 ? prev + 1 : 0))}
                 aria-label="Next image"
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100"
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-brand-surface/80 hover:bg-brand-surface text-brand-ink p-2 border border-brand-faint transition-all opacity-80 hover:opacity-100 z-20"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -274,7 +306,13 @@ export default function App() {
                         : 'border-brand-faint opacity-70 hover:opacity-100 hover:border-brand-border'
                     }`}
                   >
-                    <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-105" />
+                    <img 
+                      src={img.url} 
+                      alt={img.caption} 
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover/thumb:scale-105" 
+                    />
                     <div className="absolute bottom-0 inset-x-0 bg-brand-bg/90 backdrop-blur-sm py-1 px-1 text-center border-t border-brand-faint/60">
                       <span className="text-[11px] font-bold text-brand-ink block truncate">
                         {colorInfo?.colorLabel || img.caption}
@@ -397,7 +435,7 @@ export default function App() {
                       }`}
                     >
                       <div className="aspect-[4/3] w-full overflow-hidden border border-brand-faint/80 relative">
-                        <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                        <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         {isSelected && (
                           <span className="absolute top-1 right-1 w-4 h-4 bg-brand-accent text-brand-bg rounded-full flex items-center justify-center text-[10px] font-bold">
                             ✓
@@ -780,7 +818,7 @@ export default function App() {
                               : 'border-brand-faint bg-brand-bg hover:border-brand-border'
                           }`}
                         >
-                          <img src={c.imageUrl} alt={c.name} className="w-9 h-9 object-cover border border-brand-faint shrink-0" />
+                          <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-9 h-9 object-cover border border-brand-faint shrink-0" />
                           <div className="min-w-0">
                             <span className="text-xs font-bold text-brand-ink block truncate">{c.colorLabel}</span>
                             <span className="text-[10px] text-brand-muted block truncate">
