@@ -251,6 +251,8 @@ export const ImageZoomModal: React.FC<ImageZoomModalProps> = ({
         <img
           src={currentImage.url}
           alt={currentImage.alt}
+          loading="eager"
+          decoding="async"
           draggable={false}
           className="max-h-[78vh] max-w-[95vw] object-contain transition-transform duration-100 ease-out select-none drop-shadow-2xl"
           style={{

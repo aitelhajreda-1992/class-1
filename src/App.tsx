@@ -75,9 +75,13 @@ export default function App() {
       color.images.forEach(img => {
         const imgObj = new Image();
         imgObj.src = img.url;
-        imgObj.onload = () => {
+        if (imgObj.complete) {
           setLoadedImages(prev => ({ ...prev, [img.url]: true }));
-        };
+        } else {
+          imgObj.onload = () => {
+            setLoadedImages(prev => ({ ...prev, [img.url]: true }));
+          };
+        }
       });
     });
 
@@ -250,7 +254,7 @@ export default function App() {
               title="انقر لتكبير وفحص تفاصيل الحذاء بدقة عالية"
             >
               
-              {/* Shimmer Placeholder while loading */}
+              {/* Shimmer Placeholder while active image loads */}
               {!loadedImages[activeColorImages[currentImageIndex]?.url] && (
                 <div className="absolute inset-0 bg-stone-100 flex flex-col items-center justify-center text-brand-muted z-0">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-accent mb-2" />
@@ -258,19 +262,20 @@ export default function App() {
                 </div>
               )}
 
-              {/* Stacked Pre-loaded Images for the SELECTED COLOR with Zero-Latency Instant Switching */}
-              {activeColorImages.map((img, idx) => {
-                const isActive = currentImageIndex === idx;
+              {/* Stacked Pre-loaded Images for ALL colors & views - Permanently mounted in DOM for Instant 0ms Switching */}
+              {SHOE_DETAILS.colors.flatMap(c => c.images).map((img, globalIdx) => {
+                const isCurrentActive = activeColorImages[currentImageIndex]?.url === img.url;
                 return (
                   <img 
-                    key={`${activeColor.id}-${idx}-${img.url}`}
+                    key={img.url}
                     src={img.url} 
                     alt={img.alt}
-                    loading={idx === 0 ? "eager" : "lazy"}
+                    loading="eager"
                     decoding="async"
+                    fetchPriority={globalIdx < 4 ? "high" : "auto"}
                     onLoad={() => setLoadedImages(prev => ({ ...prev, [img.url]: true }))}
-                    className={`absolute inset-0 w-full h-full object-contain p-2 sm:p-4 transition-opacity duration-300 ${
-                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                    className={`absolute inset-0 w-full h-full object-contain p-2 sm:p-4 transition-opacity duration-150 ${
+                      isCurrentActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                     } group-hover:scale-105 transition-transform duration-700`}
                     referrerPolicy="no-referrer"
                   />
@@ -380,8 +385,9 @@ export default function App() {
                       <img 
                         src={c.imageUrl} 
                         alt={c.name} 
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
+                        fetchPriority="high"
                         className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover/thumb:scale-105" 
                       />
                       {isSelected && (
@@ -509,7 +515,7 @@ export default function App() {
                       }`}
                     >
                       <div className="aspect-[4/3] w-full overflow-hidden border border-brand-faint/80 relative bg-stone-100">
-                        <img src={c.imageUrl} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-contain p-1" />
+                        <img src={c.imageUrl} alt={c.name} loading="eager" decoding="async" className="w-full h-full object-contain p-1" />
                         {isSelected && (
                           <span className="absolute top-1 right-1 w-4 h-4 bg-brand-accent text-brand-bg rounded-full flex items-center justify-center text-[10px] font-bold">
                             ✓
