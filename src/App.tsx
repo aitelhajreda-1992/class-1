@@ -28,6 +28,21 @@ const GOOGLE_SHEET_WEBAPP_URL =
   (import.meta as any).env?.VITE_GOOGLE_SHEET_URL || 
   'https://script.google.com/macros/s/AKfycbw9c-HeyFN0p-FQ4xhL-Jvx_kTufAHLx46Z_z1Ly0Bykko3pH5pMewPWb8WJT_YK2-iYg/exec';
 
+// دالة مساعدة لإرسال أحداث Facebook Meta Pixel بأمان
+const trackPixelEvent = (event: string, params?: Record<string, any>) => {
+  if (typeof window !== 'undefined' && (window as any).fbq) {
+    try {
+      if (params) {
+        (window as any).fbq('track', event, params);
+      } else {
+        (window as any).fbq('track', event);
+      }
+    } catch (err) {
+      console.warn('Pixel tracking error:', err);
+    }
+  }
+};
+
 export default function App() {
   const [selectedSize, setSelectedSize] = useState<number>(SHOE_DETAILS.defaultSize);
   const [selectedColor, setSelectedColor] = useState<string>(SHOE_DETAILS.colors[0].name);
@@ -130,6 +145,11 @@ export default function App() {
   };
 
   const scrollToCheckout = () => {
+    trackPixelEvent('InitiateCheckout', {
+      content_name: 'حذاء OUTDOOR SPORTS الجبلي',
+      currency: 'MAD',
+      value: calculateTotalPrice(),
+    });
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -208,6 +228,21 @@ export default function App() {
           },
           body: JSON.stringify(payload),
         });
+
+        // إرسال حدث الشراء والعميل المحتمل إلى Meta Pixel لتحسين الحملة الإعلانية
+        trackPixelEvent('Purchase', {
+          content_name: 'حذاء OUTDOOR SPORTS الجبلي',
+          currency: 'MAD',
+          value: calculateTotalPrice(),
+          num_items: formData.quantity,
+          content_type: 'product',
+        });
+        trackPixelEvent('Lead', {
+          content_name: 'حذاء OUTDOOR SPORTS الجبلي',
+          currency: 'MAD',
+          value: calculateTotalPrice(),
+        });
+
         setIsSubmitted(true);
         // Scroll to confirmation view
         document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth' });
